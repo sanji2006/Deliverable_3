@@ -19,6 +19,7 @@ class Character:
         self.hp_max = hp_max
         self._hp = hp_max  # Protected attribute: only the character changes it
         self.damage = damage
+        self.weapon = weapon
 
     def take_damage(self, amount: int) -> None:
         """Reduce this character's own HP. HP never goes below 0."""
@@ -57,3 +58,43 @@ class Character:
     def is_alive(self) -> bool:
         """Read-only property: True if the character has more than 0 HP."""
         return self._hp > 0
+
+
+class Warrior(Character):
+    """A defensive specialist whose armor reduces incoming damage (Task 4)."""
+
+    def __init__(self, name: str, hp_max: int = 100, damage: int = 10,
+                 weapon: Weapon | None = None, armor: int = 5) -> None:
+        super().__init__(name, hp_max, damage, weapon)
+        if armor < 0:
+            raise ValueError("Armor cannot be negative.")
+        self.armor = armor
+
+    def take_damage(self, amount: int) -> None:
+        if amount < 0:
+            raise ValueError("Damage cannot be negative.")
+        # Clamp at zero so armor never turns an attack into healing.
+        super().take_damage(max(amount - self.armor, 0))
+
+
+class Mage(Character):
+    """A spellcaster that alternates spells and mana recovery (Task 4)."""
+
+    def __init__(self, name: str, hp_max: int = 100, damage: int = 10,
+                 weapon: Weapon | None = None, mana: int = 30,
+                 mana_max: int = 30) -> None:
+        super().__init__(name, hp_max, damage, weapon)
+        if not 0 <= mana <= mana_max:
+            raise ValueError("Mana must be between zero and mana_max.")
+        self.mana = mana
+        self.mana_max = mana_max
+
+    def attack(self, target: Character) -> None:
+        if self.mana >= 10:
+            self.mana -= 10
+            # Spells double base damage and do not roll the equipped weapon.
+            target.take_damage(2 * self.damage)
+        else:
+            # The inherited attack uses a weapon when one is equipped.
+            super().attack(target)
+            self.mana = min(self.mana + 5, self.mana_max)
