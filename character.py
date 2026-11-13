@@ -1,12 +1,16 @@
 # Object-oriented game simulator
 # Based on lecture 8 by Turid Torheim, NMBU, 2026
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from items import Weapon
 
 class Character:
     """Represents a character in the RPG."""
-
-    def __init__(self, name: str, hp_max: int = 100, damage: int = 10) -> None:
+    
+    def __init__(self, name: str, hp_max: int = 100, damage: int = 10,
+                 weapon: Weapon | None = None) -> None:
         """
         Initialise the Character.
 
@@ -14,6 +18,7 @@ class Character:
             name (str): The name of the character.
             hp_max (int): Max hit points (default = 100).
             damage (int): Damage dealt when the character attacks (default = 10).
+            weapon (Weapon | None): Optional equipped weapon (default = None).
         """
         self.name = name
         self.hp_max = hp_max
@@ -34,8 +39,12 @@ class Character:
         self._hp = min(self._hp + amount, self.hp_max)
 
     def attack(self, target: Character) -> None:
-        """Attack the target by asking it to take damage."""
-        target.take_damage(self.damage)
+        """Attack the target. Use weapon damage if a weapon is equipped."""
+        if self.weapon is not None:
+            amount = self.weapon.roll_damage()
+        else:
+            amount = self.damage
+        target.take_damage(amount)
 
     def introduce(self) -> None:
         """Print a string that introduces the character."""
